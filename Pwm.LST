@@ -1,0 +1,148 @@
+C51 COMPILER V9.52.0.0   PWM                                                               05/05/2017 21:14:15 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE PWM
+OBJECT MODULE PLACED IN Pwm.OBJ
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE Pwm.c COMPACT ROM(COMPACT) BROWSE MODP2 DEBUG OBJECTEXT
+                    -END TABS(2)
+
+line level    source
+
+   1          #include <Pwm.h>
+   2          void InitilizePwmChannel(unsigned char Channel);
+   3          unsigned char TransValue;
+   4          //void ChangeValue() interrupt
+   5          void InitilizePwm(){
+   6   1        unsigned char i;
+   7   1        P_SW2 |= 0x80;//访问扩展sfr
+   8   1        //设置周期
+   9   1        PWMCH = (PWMT>>8);
+  10   1        PWMCL = PWMT ;
+  11   1      //Initilize transverse  PWM3:P2.1 
+  12   1        InitilizePwmChannel(3);
+  13   1        //设置第一次翻转值
+  14   1        PWM3T1H= 0x00;
+  15   1        PWM3T1L= T1ValueL;
+  16   1        
+  17   1      //Initilize Left driving wheel Pwm  PWM4 :P2.2
+  18   1        //P2.2强推挽
+  19   1        InitilizePwmChannel(4);
+  20   1        //设置第一次翻转值
+  21   1        PWM4T1H= 0x00;
+  22   1        PWM4T1L= T1ValueL;
+  23   1      
+  24   1      //Initilize Right driving wheel Pwm PWM5 : P2.3
+  25   1        //P2.2强推挽
+  26   1        InitilizePwmChannel(5);
+  27   1        //设置第一次翻转值
+  28   1        PWM5T1H= 0x00;
+  29   1        PWM5T1L= T1ValueL;
+  30   1        
+  31   1        PWMCKS = 0x0d;//系统时钟,13分频
+  32   1        /*AUXR |= 0x04;   //定时器2时钟1T模式
+  33   1        T2L = (255-13);   //设置定时2初值
+  34   1        T2H = 0xFF;   //设置定时2初值,24分频
+  35   1        AUXR |= 0x10;   //定时器2开始计时
+  36   1        PWMCKS = 0x10;*///定时器2溢出
+  37   1        PWMCR |= 0x80; //启动PWM模块
+  38   1        P_SW2 &= 0x7f;//返回正常状态,不访问扩展sfr
+  39   1        SetRightWheel(0x00);
+  40   1        SetLeftWheel(0x00);
+  41   1        TransValue=LeftMax;
+  42   1        for( i = RightMax ; i <= LeftMax ; i++){
+  43   2          SetTrans(i);
+  44   2        }
+  45   1        SetTrans((LeftMax+RightMax)/2);
+  46   1      }
+  47          void InitilizePwmChannel(unsigned char Channel){
+  48   1        Channel -=2;
+  49   1        //设置为强推挽
+  50   1        P2M0 |= 0x01<<Channel;
+  51   1        P2M1 &= 0x01<<Channel;
+  52   1        #if MosCloseLevel==0 //为低时关闭，那么初始电平为低
+  53   1          PWMCFG &= 0x01<<Channel;
+  54   1        #else //否则初始电平为高
+C51 COMPILER V9.52.0.0   PWM                                                               05/05/2017 21:14:15 PAGE 2   
+
+                  PWMCFG |= 0x01<<Channel;
+                #endif
+  57   1        PWMCR |= 0x01<<Channel;//输出从GPIO改变为PWM
+  58   1      }
+  59          void SetTran(unsigned char Value){//PWM3
+  60   1        unsigned int CalcedValue ;
+  61   1        P_SW2 |= 0x80;//访问扩展sfr
+  62   1        //计算出要放入的值
+  63   1        #if MosCloseLevel==1 //两次翻转中为低电平,计算高电平时间
+                  Value = 0xff - Value;
+                #endif
+  66   1        CalcedValue = (unsigned int)(((float)Value)/255.0*(float)((PWMT - 1) - T1ValueL)); 
+  67   1        CalcedValue += T1ValueL + 1;
+  68   1        //放入第二次翻转寄存器
+  69   1        PWM3T2H = (CalcedValue>>8)&0xff;
+  70   1        PWM3T2L = CalcedValue & 0xff;
+  71   1        P_SW2 &= 0x7f;//返回正常状态,不访问扩展sfr
+  72   1      }
+  73          void SetLeftWheel(unsigned char Value){
+  74   1        unsigned int CalcedValue ;
+  75   1        P_SW2 |= 0x80;//访问扩展sfr
+  76   1        //计算出要放入的值
+  77   1        #if MosCloseLevel==1 //两次翻转中为低电平,计算高电平时间
+                  Value = 0xff - Value;
+                #endif
+  80   1        CalcedValue = (unsigned int)(((float)Value)/255.0*(float)((PWMT - 1) - T1ValueL)); 
+  81   1        CalcedValue += T1ValueL + 1;
+  82   1        //放入第二次翻转寄存器
+  83   1        PWM4T2H = (CalcedValue>>8)&0xff;
+  84   1        PWM4T2L = CalcedValue & 0xff;
+  85   1        P_SW2 &= 0x7f;//返回正常状态,不访问扩展sfr
+  86   1      }
+  87          void SetRightWheel(unsigned char Value){
+  88   1        unsigned int CalcedValue ;
+  89   1        P_SW2 |= 0x80;//访问扩展sfr
+  90   1        //计算出要放入的值
+  91   1        #if MosCloseLevel==1 //两次翻转中为低电平,计算高电平时间
+                  Value = 0xff - Value;
+                #endif
+  94   1        CalcedValue = (unsigned int)(((float)Value)/255.0*(float)((PWMT - 1) - T1ValueL)); 
+  95   1        CalcedValue += T1ValueL + 1;
+  96   1        //放入第二次翻转寄存器
+  97   1        PWM5T2H = (CalcedValue>>8)&0xff;
+  98   1        PWM5T2L = CalcedValue & 0xff;
+  99   1        P_SW2 &= 0x7f;//返回正常状态,不访问扩展sfr
+ 100   1      }
+ 101          void SetTrans(unsigned char Value){
+ 102   1        unsigned char i,t;
+ 103   1        if(TransValue < Value){
+ 104   2          t = Value - TransValue;
+ 105   2          for(i=0 ; i < t ; i++){
+ 106   3            TransValue++;
+ 107   3            SetTran(TransValue);
+ 108   3            os_wait (K_TMO, 13, 0); 
+ 109   3          }
+ 110   2        }
+ 111   1        else{
+ 112   2          t = TransValue - Value;
+ 113   2          for(i=0 ; i < t ; i++){
+ 114   3            TransValue--;
+ 115   3            SetTran(TransValue);
+ 116   3            os_wait (K_TMO, 13, 0); 
+C51 COMPILER V9.52.0.0   PWM                                                               05/05/2017 21:14:15 PAGE 3   
+
+ 117   3          }
+ 118   2        }
+ 119   1        TransValue = Value;
+ 120   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    424    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =     68       4
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

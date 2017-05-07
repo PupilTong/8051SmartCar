@@ -1,0 +1,60 @@
+C51 COMPILER V9.52.0.0   ADC                                                               05/05/2017 21:14:15 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE ADC
+OBJECT MODULE PLACED IN ADC.OBJ
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE ADC.c COMPACT ROM(COMPACT) BROWSE MODP2 DEBUG OBJECTEXT
+                    -END TABS(2)
+
+line level    source
+
+   1          #include <ADC.h>
+   2          unsigned char ADCThreadId;
+   3          unsigned char ADCBusyFlag = 0;
+   4          void ADCInterruptProcesser() interrupt 5 {
+   5   1        ADC_CONTR &= !ADC_FLAG;         //清除ADC中断标志
+   6   1        isr_set_ready(ADCThreadId);//发送转换完成信号量
+   7   1      }
+   8          
+   9          void InitilizeADC(){
+  10   1        ADC_RES = 0;                    //清除结果寄存器
+  11   1        ADC_CONTR = ADC_POWER | ADC_SPEEDH;
+  12   1        os_wait(K_TMO,2,0);//等待2毫秒
+  13   1        PADC = 0;//优先级低
+  14   1        EADC = 1;//使能ADC中断;
+  15   1      }
+  16          unsigned char GetADCResult(unsigned char Channel){
+  17   1        while(ADCBusyFlag);//Loop until NotBusy
+  18   1        ADCBusyFlag = 1;
+  19   1        ADCThreadId = os_running_task_id();
+  20   1        ADC_RES = 0;                    //清除结果寄存器
+  21   1        if(Channel==9){
+  22   2          P1ASF=0x00;//选择通道9
+  23   2          ADC_CONTR = ADC_POWER | ADC_SPEEDLL | 0 | ADC_START;
+  24   2        }
+  25   1        else{ //Channel<9
+  26   2          P1ASF=0x01<<Channel;//打开引脚
+  27   2          ADC_CONTR = ADC_POWER | ADC_SPEEDLL | ADC_START | Channel;//选择通道并启动
+  28   2        }
+  29   1        os_wait(K_SIG,2,0);//等待转换完成
+  30   1        Channel = ADC_RES;//临时保存
+  31   1        ADCBusyFlag = 0;
+  32   1        return Channel;
+  33   1      }
+  34          unsigned char GetVccReference(){
+  35   1        return GetADCResult(9);
+  36   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    187    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =     69       1
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

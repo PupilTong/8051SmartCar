@@ -1,0 +1,157 @@
+C51 COMPILER V9.52.0.0   MAIN                                                              05/05/2017 21:14:14 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE main.c COMPACT ROM(COMPACT) BROWSE MODP2 DEBUG OBJECTEX
+                    -TEND TABS(2)
+
+line level    source
+
+   1          /******************************************************************************/
+   2          /*                                                                            */
+   3          /*                     RTX_EX2.C:  A RTX-51 Application                       */
+   4          /*                                                                            */
+   5          /******************************************************************************/
+   6          
+   7          #include <rtx51tny.h>                 /* RTX-51 tiny functions & defines      */
+   8          #include <STC15F2K60S2.H>
+   9          #include <System.h>
+  10          
+  11          
+  12          void ADCServices () _task_ 2  {
+  13   1       unsigned char a,b;
+  14   1       a=40;
+  15   1        while (1)  { 
+  16   2          //P20=~P20;
+  17   2          /*os_wait (K_TMO, 500, 0); 
+  18   2          SetTrans(LeftMax);
+  19   2          os_wait (K_TMO, 500, 0); 
+  20   2          SetTrans(RightMax);
+  21   2          P2=~(a<<4);
+  22   2          if(b==0){
+  23   2            a++;
+  24   2            if(a==41){
+  25   2              b=1;
+  26   2            }
+  27   2          }
+  28   2          else{
+  29   2            a--;
+  30   2            if(a==30){
+  31   2              b=0;
+  32   2            }
+  33   2          }*/
+  34   2          //SerialWrite("hello \n \0");
+  35   2        }
+  36   1      }
+*** WARNING C280 IN LINE 13 OF main.c: 'b': unreferenced local variable
+  37          
+  38          
+  39          void job2 () _task_ 3  {
+  40   1       unsigned char a,b;
+  41   1        while (1)  {
+  42   2          os_wait (K_TMO, 2, 0);           /* wait for timeout: 10 ticks           */
+  43   2          //P22=~P22;
+  44   2        }
+  45   1      }
+*** WARNING C280 IN LINE 40 OF main.c: 'a': unreferenced local variable
+*** WARNING C280 IN LINE 40 OF main.c: 'b': unreferenced local variable
+  46          
+  47          void job3 () _task_ 1  {
+  48   1       unsigned char NL,NR;//近处两个
+  49   1       unsigned char FL,FR;//远处两个
+  50   1       unsigned char NResult,FResult,Result;
+  51   1       unsigned char BoolL;
+C51 COMPILER V9.52.0.0   MAIN                                                              05/05/2017 21:14:14 PAGE 2   
+
+  52   1        while (1)  {
+  53   2          os_wait (K_TMO, 3, 0);  
+  54   2          NL = GetADCResult(0);
+  55   2          NR = GetADCResult(1);  
+  56   2          FL = GetADCResult(2);
+  57   2          FR = GetADCResult(3);
+  58   2          if(NL > 0x3f && NR > 0x3f){//近处界限未超出
+  59   3            if(NL > NR){
+  60   4              NResult = NL - NR;
+  61   4              BoolL = 0;
+  62   4            }
+  63   3            else{
+  64   4              NResult = NR - NL;//在左
+  65   4              BoolL = 1;
+  66   4            }
+  67   3            if(NResult <= 0x03){
+  68   4              NResult = 0x00;
+  69   4            }
+  70   3            else if(NResult <= 0x07){
+  71   4              NResult = 0x01;
+  72   4            }
+  73   3            else if(NResult <= 0x0f){
+  74   4              NResult = 0x02;
+  75   4            }
+  76   3            else if(NResult <= 0x7f){
+  77   4              NResult = 0x03;
+  78   4            }
+  79   3            else if(NResult >= 0x80){
+  80   4              NResult = 0x04;
+  81   4            }
+  82   3          }
+  83   2          else{//超出
+  84   3            NResult = NR/2+NL/2;
+  85   3            if(NL > NR){;
+  86   4              BoolL = 0;
+  87   4            }
+  88   3            else{//在左
+  89   4              BoolL = 1;
+  90   4            }
+  91   3            
+  92   3            if(NResult >= 0x40){
+  93   4              NResult = 0x05;
+  94   4            }
+  95   3            else{
+  96   4              NResult = 0x06;
+  97   4            }
+  98   3          }
+  99   2          //----------------------------------近传感器解算完毕
+ 100   2          FResult = FR>FL?FL:FR;
+ 101   2          if(FResult <= 0x0B){
+ 102   3            Result = 0x0;
+ 103   3          }
+ 104   2          else if(FResult <= 0x30){
+ 105   3            Result = 0x25;
+ 106   3          }
+ 107   2          else if(FResult >= 0x40){
+ 108   3            Result = 0x40;
+ 109   3          }
+ 110   2          else if(FResult >= 0x50){
+ 111   3            Result = 0x55;
+ 112   3          }
+ 113   2          FResult = Speed - Result;
+C51 COMPILER V9.52.0.0   MAIN                                                              05/05/2017 21:14:14 PAGE 3   
+
+ 114   2          //--------------------------------------远传感器解算完毕
+ 115   2          if(BoolL){
+ 116   3            SetTrans(38-NResult);
+ 117   3          }
+ 118   2          else{
+ 119   3            SetTrans(38+NResult);
+ 120   3          }
+ 121   2          SetLeftWheel(FResult);
+ 122   2          SetRightWheel(FResult);
+ 123   2          P2=~FResult;
+ 124   2          //Result=(unsigned char)((float)GetADCResult(0)/255.0*(float)GetVccReference()*3);;
+ 125   2        }
+ 126   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    346    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =     67      11
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  3 WARNING(S),  0 ERROR(S)

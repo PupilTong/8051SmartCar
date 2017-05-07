@@ -1,0 +1,46 @@
+C51 COMPILER V9.52.0.0   PID                                                               05/05/2017 21:14:15 PAGE 1   
+
+
+C51 COMPILER V9.52.0.0, COMPILATION OF MODULE PID
+OBJECT MODULE PLACED IN Pid.OBJ
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE Pid.c COMPACT ROM(COMPACT) BROWSE MODP2 DEBUG OBJECTEXT
+                    -END TABS(2)
+
+line level    source
+
+   1          #include <Pid.h>
+   2          int pre2Err; //前两拍误差
+   3          int preErr;//前一拍误差
+   4          
+   5          
+   6          unsigned char pid(int Err,unsigned char U){
+   7   1        int pErr,dErr,dU;
+   8   1        pErr = Err - preErr;   //比例项增量式误差
+   9   1        dErr = Err - 2 * preErr + pre2Err;  //微分项增量式误差
+  10   1        dU = Pconst * pErr+ Dconst * dErr + Iconst * Err;  //控制量增量
+  11   1        pre2Err = preErr;
+  12   1        preErr = Err;
+  13   1        
+  14   1        dU += (int)U;
+  15   1        if(dU<0){
+  16   2          return 0x00;
+  17   2        }
+  18   1        if(dU>255){
+  19   2          return 0xff;
+  20   2        }
+  21   1        return (unsigned char)(dU & 0xff);
+  22   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    107    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =      4       4
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

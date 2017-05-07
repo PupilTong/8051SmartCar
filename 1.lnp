@@ -1,0 +1,9 @@
+"main.obj",
+"System.obj",
+"ADC.obj",
+"Pwm.obj",
+"Pid.obj" 
+TO "1" Rtx51Tiny 
+RAMSIZE(256) 
+CODE( 0X0000-0XEFF8 )
+XDATA( 0X0000-0X0EFF )
